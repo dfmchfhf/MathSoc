@@ -97,6 +97,20 @@ switch($action) {
       $asset_res = $asset_stmt->fetch();
     }
     $assetid = $asset_res['asset_id'];
+    $cust_stmt = $dbh->prepare(
+      'SELECT * '
+      . 'FROM `customers` '
+      . 'WHERE `uwID` = :uwID'
+    );
+    $cust_stmt->execute(array(":uwID" => $id));
+    $cust_res = $cust_stmt->fetch();
+    if ($cust_res === false) {
+      $cust_inst = $dbh->prepare(
+        'INSERT INTO `customers`(`uwID`, `name`)'
+        . 'VALUES (:uwID, :name)'
+      );
+      $cust_inst->execute(array(":uwID" => $id, ":name" => ""));
+    }
     $co_stmt = $dbh->prepare(
       'INSERT INTO `checkouts`(`uwID`, `asset_id`, `checkout`) '
       . 'VALUES (:uwid, :assetid, NOW());'

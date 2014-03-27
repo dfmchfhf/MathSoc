@@ -40,6 +40,10 @@
       div#checkout, div#out, div#hist {
         padding: 50px 0 0 0;
       }
+      div#credits {
+        font-size: 60%;
+        padding: 25px 0 0 0;
+      }
     </style>
     <script type="text/javascript">
     var id = null;
@@ -154,7 +158,10 @@
         } else {
           n.value=resp.name;
           displayHist(resp.co);
-          checkout.appendChild(document.createTextNode("Check out "));
+          checkouttext = document.createElement("strong");
+          checkouttext.appendChild(document.createTextNode("Check out"));
+          checkout.appendChild(checkouttext);
+          checkout.appendChild(document.createTextNode(" "));
           co = document.createElement("input");
           co.setAttribute("type", "text");
           co.setAttribute("list", "assets");
@@ -168,11 +175,18 @@
           save.innerHTML="Check out";
           save.setAttribute("onclick", "co = document.getElementById('co_item'); if (co.value.length != 0) { checkOut('" + escapeInnerString(resp.uwID) + "', co.value);}");
           checkout.appendChild(save);
+          if(resp.name.length == 0) {
+            n.readOnly = false;
+            n.focus();
+          }
         }
       } else if(resp.asset) {
         a.value=resp.asset;
         displayHist(resp.co);
-        checkout.appendChild(document.createTextNode("Check out " + resp.asset + " to "));
+        checkouttext = document.createElement("strong");
+        checkouttext.appendChild(document.createTextNode("Check out"));
+        checkout.appendChild(checkouttext);
+        checkout.appendChild(document.createTextNode(" " + resp.asset + " to "));
         co = document.createElement("input");
         co.setAttribute("size",8);
         co.setAttribute("maxlength",8);
@@ -243,6 +257,7 @@
           row.insertCell(-1).innerHTML=intime;
           ci = document.createElement("a");
           ci.setAttribute("onDblClick","checkOut('" + escapeInnerString(co.uwid) + "','" + escapeInnerString(co.asset) + "');");
+          ci.setAttribute("title","Double click to check out this item to the customer again");
           ci.innerHTML = "Check Out";
           ci.className = "co";
           row.insertCell(-1).appendChild(ci);
@@ -255,6 +270,7 @@
           ci = document.createElement("a");
           ci.className = "ci";
           ci.setAttribute("onDblClick","checkIn('" + escapeInnerString(co.uwid) + "'," + escapeInnerString(co.id) + ");");
+          ci.setAttribute("title","Double-click when the customer returns the item");
           ci.innerHTML = "Check In";
           row.insertCell(-1).appendChild(ci);
         }
@@ -393,21 +409,28 @@
   <body onload="updateLists(); setInterval(updateLists, 5000);">
     <datalist id="uwids"></datalist>
     <datalist id="assets"></datalist>
-    <table>
+    <table class="form">
       <tr>
+        <td>Search:</td>
         <td>
-          <table class="form">
-            <tr><td><label for="uwid">uwID:</label></td><td><input type="text" name="uwid" id="uwid" maxlength=8 size=8 autofocus="autofocus" list="uwids" onkeyup="if(validateIDField(this) && event.keyCode == 13) {submitID(this.value);}" onblur="if(validateIDField(this)) { submitID(this.value);}" /> <span id="loading"></span></td></tr>
-            <tr><td><label for="name">Name:</label></td><td><input type="text" name="name" id="name" title="Double-click to edit" readonly=true ondblclick="if(getId() != null) {this.readOnly=false;}" onkeyup="if(!this.readonly && event.keyCode == 13) {this.readOnly=true; saveName(this.value);}" onblur="if(!this.readonly) {this.readOnly=true; saveName(this.value);}" /></td></tr>
+          <table>
+            <tr>
+              <td>
+                <table class="form">
+                  <tr><td><label for="uwid">uwID:</label></td><td><input type="text" name="uwid" id="uwid" maxlength=8 size=8 autofocus="autofocus" list="uwids" onkeyup="if(validateIDField(this) && event.keyCode == 13) {submitID(this.value);}" onblur="if(validateIDField(this)) { submitID(this.value);}" /> <span id="loading"></span></td></tr>
+                  <tr><td><label for="name">Name:</label></td><td><input type="text" name="name" id="name" title="Double-click to edit" readonly=true ondblclick="if(getId() != null) {this.readOnly=false;}" onkeyup="if(!this.readonly && event.keyCode == 13) {this.readOnly=true; saveName(this.value);}" onblur="if(!this.readonly) {this.readOnly=true; saveName(this.value);}" /></td></tr>
+                </table>
+              </td>
+              <td style="padding:12px;"> or </td>
+              <td>
+                <table class="form"><tr><td><label for="item">Item:</label></td><td><input type="text" name="item" id="item" list="assets" onkeyup="if(this.value.length != 0 && event.keyCode == 13) {checkItemStatus(this.value);}" onblur="if(this.value.length != 0) {checkItemStatus(this.value);} " /></td></tr></table>
+              </td>
+              <td style="padding:12px;"> or </td>
+              <td>
+                <a href="javascript:checkItemStatus(null);">View All Checkouts</a>
+              </td>
+            </tr>
           </table>
-        </td>
-        <td style="padding:12px;"> or </td>
-        <td>
-          <table class="form"><tr><td><label for="item">Item:</label></td><td><input type="text" name="item" id="item" list="assets" onkeyup="if(this.value.length != 0 && event.keyCode == 13) {checkItemStatus(this.value);}" onblur="if(this.value.length != 0) {checkItemStatus(this.value);} " /></td></tr></table>
-        </td>
-        <td style="padding:12px;"> or </td>
-        <td>
-          <a href="javascript:checkItemStatus(null);">View All Checkouts</a>
         </td>
       </tr>
     </table>
@@ -418,7 +441,7 @@
 
     <div id="hist"></div>
 
-    <div id="Credits">MathSoc Checkout software v1.0.2.  Created by Henry Fung - for support, <a href="mailto:dfmchfhf@gmail.com">send me an e-mail</a> or <a href="computing@mathsoc.uwaterloo.ca">ask the Computing director</a>.  Licensed under the GPL v2.</div>
+    <div id="Credits">MathSoc Checkout software v1.0.3.  Created by Henry Fung - for support, <a href="mailto:dfmchfhf@gmail.com">send me an e-mail</a> or <a href="computing@mathsoc.uwaterloo.ca">ask the Computing director</a>.  Licensed under the GPL v2.</div>
   </body>
 </html>
 
