@@ -42,7 +42,7 @@ CREATE TABLE IF NOT EXISTS `checkouts` (
   `checkout_id` int(11) NOT NULL AUTO_INCREMENT,
   `uwID` varchar(8) NOT NULL,
   `asset_id` int(11) NOT NULL,
-  `checkout` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `checkout` datetime NOT NULL,
   `checkin` datetime DEFAULT NULL,
   PRIMARY KEY (`checkout_id`),
   KEY `uwID` (`uwID`),

@@ -98,8 +98,8 @@ switch($action) {
     }
     $assetid = $asset_res['asset_id'];
     $co_stmt = $dbh->prepare(
-      'INSERT INTO `checkouts`(`uwID`, `asset_id`) '
-      . 'VALUES (:uwid, :assetid);'
+      'INSERT INTO `checkouts`(`uwID`, `asset_id`, `checkout`) '
+      . 'VALUES (:uwid, :assetid, NOW());'
     );
     $co_stmt->execute(array(":uwid" => $id, ":assetid" => $assetid));
     break;
