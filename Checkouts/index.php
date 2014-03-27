@@ -415,8 +415,10 @@
     <div id="checkout"></div>
 
     <div id="out"></div>
-    
+
     <div id="hist"></div>
+
+    <div id="Credits">MathSoc Checkout software v1.0.2.  Created by Henry Fung - for support, <a href="mailto:dfmchfhf@gmail.com">send me an e-mail</a> or <a href="computing@mathsoc.uwaterloo.ca">ask the Computing director</a>.  Licensed under the GPL v2.</div>
   </body>
 </html>
 
