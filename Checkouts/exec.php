@@ -1,70 +1,162 @@
 <?php
+/*
+    Copyright (C) 2014 Henry Fung
+
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+*/
+
 function getFromRequest($k, $d = null) {
   return isset($_REQUEST[$k]) ? $_REQUEST[$k] : $d;
 }
 function error($msg) {
   die();
 }
+function scoreMatch($searchwords, $targetwords) { /* {{{ */
+  $score = 0;
+  foreach ($searchwords as $word) {
+    $maxdelta = 0;
+    foreach ($targetwords as &$target) {
+      if (stristr($target, $word)) {
+        $maxdelta += strlen($word);
+        if (stripos($target, $word) == 0) {
+          $maxdelta += strlen($word);
+        }
+        if (strripos($target, $word) + strlen($word) == strlen($target)) {
+          $maxdelta += strlen($word);
+        }
+        break;
+      }
+    }
+    $score += $maxdelta;
+  }
+  return $score;
+} /* }}} */
+function getUwidCheckouts($dbh, $id) {
+  $get_user_stmt = $dbh->prepare(
+    'SELECT * '
+    .' FROM `customers` '
+    .' WHERE `uwID` = :id;'
+  );
+  $get_user_stmt->execute(array(':id' => $id));
 
-$action = strtolower(getFromRequest('action', 'get'));
+  $user = $get_user_stmt->fetch();
+
+  $checkouts = null;
+  if ($user) {
+    $get_co_stmt = $dbh->prepare(
+      'SELECT o.`checkout_id`, o.`uwID`, c.`name`, a.`name` AS `asset`, o.`checkout`, o.`checkin` '
+      .' FROM `checkouts` o '
+      .' JOIN `assets` a '
+      .'   ON a.`asset_id` = o.`asset_id` '
+      .' JOIN `customers` c '
+      .'   ON c.`uwID` = o.`uwID` '
+      .' WHERE o.`uwID` = :id '
+      .' ORDER BY o.checkin DESC, o.checkout DESC;'
+    );
+    $get_co_stmt->execute(array(':id' => $id));
+    $cos = $get_co_stmt->fetchAll();
+    foreach ($cos as $co) {
+      $checkouts[] = array('id' => $co['checkout_id'], 'uwid' => $co['uwID'], 'name' => $co['name'], 'asset' => $co['asset'], 'out' => $co['checkout'], 'in' => $co['checkin']);
+    }
+  } else {
+    $user['uwID'] = $id;
+    $user['name'] = null;
+  }
+  $result = array('type' => 'uwid', 'id' => $user['uwID'], 'name' => $user['name'], 'checkouts' => $checkouts);
+  return $result;
+}
+
+$action = strtolower(getFromRequest('action', 'getAllTransactions'));
 
 $dbsn = 'mysql:dbname=mathsoc;host=localhost';
 $dbuser = 'mathsoc';
 $dbpass = 'Vx5dXfpjMm9naBcv';
 $dbh = new PDO($dbsn,$dbuser,$dbpass) or die();
 
-$return = "uwid";
+$result = null;
 switch($action) {
-  case "status":
-    $return = "item";
-    break;
-  case "getassetlist":
-  case "getuwidlist":
-  case "getlists":
-    $return = "list";
-    break;
-  case "getallcheckouts":
-    $return = "co";
-    break;
-  case "assetcreate":
-    $return = "true";
-    break;
-}
-
-$id = getFromRequest('id');
-$get_stmt = null;
-$result = false;
-switch($return) {
-  case "uwid":
+  case 'getuwidlist': /* {{{ */
+    $get_stmt = $dbh->prepare(
+      'SELECT c.`uwID` AS `uwID`, c.`name` AS `name`, GREATEST(MAX(IFNULL(o.`checkout`, 0)), MAX(IFNULL(o.`checkin`, 0))) AS `last` '
+      .' FROM `customers` c '
+      .' LEFT JOIN `checkouts` o '
+      .'   ON o.`uwID` = c.`uwID` '
+      .' GROUP BY c.`uwID`;'
+    );
+    $get_stmt->execute();
+    $users = $get_stmt->fetchAll();
+    $q = getFromRequest('q');
+    if ($q !== null && strlen($q)) {
+      $searchwords = preg_split('/[ .-]+/', $q);
+      usort($searchwords, function($a, $b) { return strlen($b) - strlen($a); });
+      foreach ($users as &$user) {
+        $userwords = preg_split('/[ .-]+/', $user['name'] . ' ' . $user['uwID']);
+        usort($userwords, function($a, $b) { return strlen($b) - strlen($a); });
+        $user['score'] = scoreMatch($searchwords, $userwords);
+      }
+      $users = array_filter($users, function($u) { return $u['score']; });
+    } else {
+      foreach ($users as &$user) {
+        $user['score'] = 0;
+      }
+    }
+    usort($users, function($a, $b) { return $b['score'] - $a['score'] ? $b['score'] - $a['score'] : $b['last'] > $a['last']; }); /* BOO PHP unstable sort */
+    $result = array_map(function($r) { return array('id' => $r['uwID'], 'name' => $r['name'], 'score' => $r['score']); }, $users);
+    break; /* }}} */
+  case 'getitemlist': /* {{{ */
+    $get_stmt = $dbh->prepare(
+      'SELECT a.`name`, COUNT(*) as `count` '
+      .' FROM `assets` a'
+      .' LEFT JOIN `checkouts` o '
+      .'   ON o.`asset_id` = a.`asset_id` '
+      .' GROUP BY a.`asset_id`;'
+    );
+    $get_stmt->execute();
+    $items = $get_stmt->fetchAll();
+    $q = getFromRequest('q');
+    if ($q !== null && strlen($q)) {
+      $searchwords = preg_split('/[ .-]+/', $q);
+      usort($searchwords, function($a, $b) { return strlen($b) - strlen($a); });
+      foreach ($items as &$item) {
+        $itemwords = preg_split('/[ .-]+/', $item['name']);
+        usort($itemwords, function($a, $b) { return strlen($b) - strlen($a); });
+        $item['score'] = scoreMatch($searchwords, $itemwords);
+      }
+      $items = array_filter($items, function($i) { return $i['score']; });
+    } else {
+      foreach ($items as &$item) {
+        $item['score'] = 0;
+      }
+    }
+    usort($items, function($a, $b) { return $b['score'] - $a['score'] ? $b['score'] - $a['score'] : $b['count'] > $a['count']; }); /* PHP unstable sort can die in a fire */
+    $result = array_map(function($r) { return array('name' => $r['name'], 'score' => $r['score']); }, $items);
+    break; /* }}} */
+  case 'savename': /* {{{ */
+    $id = getFromRequest('id');
     if (!preg_match('/^\\d{8}$/',$id)) {
       error("Invalid ID");
     }
-    $get_stmt = $dbh->prepare(
-      'SELECT * '
-      . 'FROM `customers` '
-      . 'WHERE `uwID` = :uwID;'
-    );
-    $get_stmt->execute(array(":uwID" => $id));
-
-    $result = $get_stmt->fetch();
-    break;
-  case "item":
-    $get_stmt = $dbh->prepare(
-      'SELECT * '
-      . 'FROM `assets` '
-      . 'WHERE `name` = :name;'
-    );
-    $get_stmt->execute(array(":name" => $id));
-    break;
-  case "list":
-    $result = array();
-    break;
-}
-
-switch($action) {
-  case "savename":
     $name = getFromRequest('name');
-    if ($result !== false) {
+    $get_user_stmt = $dbh->prepare(
+      'SELECT * '
+      .' FROM `customers` '
+      .' WHERE `uwID` = :id;'
+    );
+    $get_user_stmt->execute(array(':id' => $id));
+    $user = $get_user_stmt->fetch();
+    $save_stmt = null;
+    if ($user !== false) {
       $save_stmt = $dbh->prepare(
         'UPDATE `customers` '
         . 'SET `name` = :name '
@@ -77,8 +169,86 @@ switch($action) {
       );
     }
     $save_stmt->execute(array(":name" => $name, ":uwID" => $id));
-    break;
-  case "checkout":
+    $result = getUwidCheckouts($dbh, $id);
+    break; /* }}} */
+  case 'getuwidcheckouts': /* {{{ */
+    $id = getFromRequest('id');
+    if (!preg_match('/^\\d{8}$/',$id)) {
+      error("Invalid ID");
+    }
+    $result = getUwidCheckouts($dbh, $id);
+    break; /* }}} */
+  case 'getitemcheckouts': /* {{{ */
+    $item = getFromRequest('item');
+    if (!strlen($item)) {
+      error("No item");
+    }
+    $get_asset_stmt = $dbh->prepare(
+      'SELECT * '
+      . 'FROM `assets` '
+      . 'WHERE `name` = :name;'
+    );
+    $get_asset_stmt->execute(array(':name' => $item));
+    $asset = $get_asset_stmt->fetch();
+
+    $checkouts = null;
+    if ($asset !== false) {
+      $get_co_stmt = $dbh->prepare(
+        'SELECT o.`checkout_id`, o.`uwID`, c.`name`, a.`name` AS `asset`, o.`checkout`, o.`checkin` '
+        .' FROM `checkouts` o '
+        .' JOIN `assets` a '
+        .'   ON a.`asset_id` = o.`asset_id` '
+        .' JOIN `customers` c '
+        .'   ON c.`uwID` = o.`uwID` '
+        .' WHERE a.`asset_id` = :assetid '
+        .' ORDER BY o.checkin ASC, o.checkout ASC;'
+      );
+      $get_co_stmt->execute(array(':assetid' => $asset['asset_id']));
+      $cos = $get_co_stmt->fetchAll();
+      foreach ($cos as $co) {
+        $checkouts[] = array('id' => $co['checkout_id'], 'uwid' => $co['uwID'], 'name' => $co['name'], 'asset' => $co['asset'], 'out' => $co['checkout'], 'in' => $co['checkin']);
+      }
+    } else {
+      $asset['name'] = $item;
+    }
+    $result = array('type' => 'item', 'item' => $asset['name'], 'checkouts' => $checkouts);
+    break; /* }}} */
+  case 'getallcheckouts': /* {{{ */
+    $get_co_stmt = $dbh->prepare(
+      'SELECT o.`checkout_id`, o.`uwID`, c.`name`, a.`name` AS `asset`, o.`checkout`, o.`checkin` '
+      .' FROM `checkouts` o '
+      .' JOIN `assets` a '
+      .'   ON a.`asset_id` = o.`asset_id` '
+      .' JOIN `customers` c '
+      .'   ON c.`uwID` = o.`uwID` '
+      .' ORDER BY o.checkin DESC, o.checkout DESC;'
+    );
+    $get_co_stmt->execute();
+    $cos = $get_co_stmt->fetchAll();
+    foreach ($cos as $co) {
+      $checkouts[] = array('id' => $co['checkout_id'], 'uwid' => $co['uwID'], 'name' => $co['name'], 'asset' => $co['asset'], 'out' => $co['checkout'], 'in' => $co['checkin']);
+    }
+    $result = array('type' => 'plain', 'checkouts' => $checkouts);
+    break;/* }}} */
+  case 'checkin': /* {{{ */
+    $id = getFromRequest('id');
+    if (!preg_match('/^\\d{8}$/',$id)) {
+      error("Invalid ID");
+    }
+    $co_id = getFromRequest('coid');
+    $ci_stmt = $dbh->prepare(
+      'UPDATE `checkouts` '
+      . 'SET `checkin` = NOW() '
+      . 'WHERE `uwID` = :uwID AND `checkout_id` = :co AND `checkin` IS NULL'
+    );
+    $ci_stmt->execute(array(":uwID" => $id, ":co" => $co_id));
+    $result = getUwidCheckouts($dbh, $id);
+    break; /* }}} */
+  case 'checkout': /* {{{ */
+    $id = getFromRequest('id');
+    if (!preg_match('/^\\d{8}$/',$id)) {
+      error("Invalid ID");
+    }
     $asset_name = getFromRequest('asset');
     $asset_stmt = $dbh->prepare(
       'SELECT asset_id '
@@ -116,174 +286,9 @@ switch($action) {
       . 'VALUES (:uwid, :assetid, NOW());'
     );
     $co_stmt->execute(array(":uwid" => $id, ":assetid" => $assetid));
-    break;
-  case "checkin":
-    $co = getFromRequest('co');
-    $ci_stmt = $dbh->prepare(
-      'UPDATE `checkouts` '
-      . 'SET `checkin` = NOW() '
-      . 'WHERE `uwID` = :uwID AND `checkout_id` = :co AND `checkin` IS NULL'
-    );
-    $ci_stmt->execute(array(":uwID" => $id, ":co" => $co));
-    break;
-  case "assetcreate":
-    $asset_stmt = $dbh->prepare(
-      'SELECT asset_id '
-      . 'FROM `assets` '
-      . 'WHERE `name` = :name;'
-    );
-    $asset_stmt->execute(array(":name" => $id));
-    $asset_res = $asset_stmt->fetch();
-    if ($asset_res === false) {
-      $asset_inst = $dbh->prepare(
-        'INSERT INTO `assets`(`name`) '
-        . 'VALUES (:name);'
-      );
-      $asset_inst->execute(array(":name" => $id));
-    }
-    break;
-  case "status":
-    break;
-  case "getassetlist":
-    $asset_stmt = $dbh->prepare(
-      'SELECT a.* '
-      . 'FROM `assets` a '
-      . 'LEFT JOIN ('
-      .   'SELECT `asset_id`, count(`asset_id`) AS `count` '
-      .     'FROM `checkouts` '
-      .     'GROUP BY `asset_id`'
-      . ') c '
-      .   'ON c.`asset_id` = a.`asset_id` '
-      . 'ORDER BY c.count DESC, a.name ASC;'
-    );
-    $asset_stmt->execute();
-    $asset_res = $asset_stmt->fetchAll();
-    foreach($asset_res as $asset) {
-      $result[] = $asset['name'];
-    }
-    break;
-  case "getuwidlist":
-    $uwid_stmt = $dbh->prepare(
-      'SELECT * '
-      . 'FROM `customers` '
-      . 'ORDER BY uwID;'
-    );
-    $uwid_stmt->execute();
-    $uwid_res = $uwid_stmt->fetchAll();
-    foreach($uwid_res as $uwid) {
-      $result[] = $uwid['uwID'];
-    }
-    break;
-  case "getlists":
-    $asset_stmt = $dbh->prepare(
-      'SELECT a.* '
-      . 'FROM `assets` a '
-      . 'LEFT JOIN ('
-      .   'SELECT `asset_id`, count(`asset_id`) AS `count` '
-      .     'FROM `checkouts` '
-      .     'GROUP BY `asset_id`'
-      . ') c '
-      .   'ON c.`asset_id` = a.`asset_id` '
-      . 'ORDER BY c.count DESC, a.name ASC;'
-    );
-    $asset_stmt->execute();
-    $asset_res = $asset_stmt->fetchAll();
-    $result['assets'] = array();
-    foreach($asset_res as $asset) {
-      $result['assets'][] = $asset['name'];
-    }
-    $uwid_stmt = $dbh->prepare(
-      'SELECT * '
-      . 'FROM `customers` '
-      . 'ORDER BY uwID;'
-    );
-    $uwid_stmt->execute();
-    $uwid_res = $uwid_stmt->fetchAll();
-    $result['uwids'] = array();
-    foreach($uwid_res as $uwid) {
-      $result['uwids'][] = $uwid['uwID'];
-    }
-    break;
+    $result = getUwidCheckouts($dbh, $id);
+    break; /* }}} */
 }
 
-switch($return) {
-  case "uwid":
-    $get_stmt->execute(array(":uwID" => $id));
+echo json_encode($result);
 
-    $result = $get_stmt->fetch();
-
-    if($result !== false) {
-      $co_stmt = $dbh->prepare(
-        'SELECT c.`checkout_id`, c.`uwID`, u.`name`, a.`name` AS `asset`, c.`checkout`, c.`checkin` '
-        . 'FROM `checkouts` c '
-        . 'JOIN `assets` a '
-        .   'ON a.`asset_id` = c.`asset_id` '
-        . 'JOIN `customers` u '
-        .   'ON u.`uwID` = c.`uwID` '
-        . 'WHERE u.`uwID` = :uwID '
-        . 'ORDER BY c.checkin ASC, c.checkout_id ASC;'
-      );
-      $co_stmt->execute(array(":uwID" => $result['uwID']));
-      $co_res = $co_stmt->fetchAll();
-      $cos = array();
-      foreach($co_res as $co) {
-        $cos[] = array('id' => $co['checkout_id'], 'uwid' => $co['uwID'], 'name' => $co['name'], 'asset' => $co['asset'], 'out' => $co['checkout'], 'in' => ($co['checkin'] == null ? null : $co['checkin']));
-      }
-      echo json_encode(array('uwID' => $result['uwID'], 'name' => $result['name'], 'co' => $cos));
-    } else {
-      echo json_encode(array('uwID' => $id, 'name' => null, 'co' => array()));
-    }
-    break;
-  case "item":
-    $get_stmt->execute(array(":name" => $id));
-
-    $result = $get_stmt->fetch();
-
-    if ($result !== false) {
-      $co_stmt = $dbh->prepare(
-        'SELECT c.`checkout_id`, c.`uwID`, u.`name`, a.`name` AS `asset`, c.`checkout`, c.`checkin` '
-        . 'FROM `checkouts` c '
-        . 'JOIN `assets` a '
-        .   'ON a.`asset_id` = c.`asset_id` '
-        . 'JOIN `customers` u '
-        .   'ON u.`uwID` = c.`uwID` '
-        . 'WHERE a.`asset_id` = :assetid '
-        . 'ORDER BY c.checkin ASC, c.checkout_id ASC;'
-      );
-      $co_stmt->execute(array(":assetid" => $result['asset_id']));
-      $co_res = $co_stmt->fetchAll();
-      $cos = array();
-      foreach($co_res as $co) {
-        $cos[] = array('id' => $co['checkout_id'], 'uwid' => $co['uwID'], 'name' => $co['name'], 'asset' => $co['asset'], 'out' => $co['checkout'], 'in' => ($co['checkin'] == null ? null : $co['checkin']));
-      }
-      echo json_encode(array('assetid' => $result['asset_id'], 'asset' => $result['name'], 'co' => $cos));
-    } else {
-      echo json_encode(array('assetid' => null, 'asset' => $id, 'co' => array()));
-    }
-    break;
-  case "list":
-    echo json_encode($result);
-    break;
-  case "co":
-    $co_stmt = $dbh->prepare(
-      'SELECT c.`checkout_id`, c.`uwID`, u.`name`, a.`name` AS `asset`, c.`checkout`, c.`checkin` '
-      . 'FROM `checkouts` c '
-      . 'JOIN `assets` a '
-      .   'ON a.`asset_id` = c.`asset_id` '
-      . 'JOIN `customers` u '
-      .   'ON u.`uwID` = c.`uwID` '
-      . 'ORDER BY c.checkin ASC, c.checkout_id ASC;'
-    );
-    $co_stmt->execute();
-    $co_res = $co_stmt->fetchAll();
-    $cos = array();
-    foreach($co_res as $co) {
-      $cos[] = array('id' => $co['checkout_id'], 'uwid' => $co['uwID'], 'name' => $co['name'], 'asset' => $co['asset'], 'out' => $co['checkout'], 'in' => ($co['checkin'] == null ? null : $co['checkin']));
-    }
-    echo json_encode(array('co' => $cos));
-    break;
-  case "true":
-    echo true;
-    break;
-}
-?>
