@@ -1,3 +1,4 @@
+/*global $, jQuery */
 $('.panel-collapsible > .panel-heading').on('click', function() {
   $(this).siblings('.panel-body').toggle('blind');
 });
@@ -5,7 +6,7 @@ $('.panel-collapsible > .panel-heading').on('click', function() {
 $('.has-tooltip').tooltip({
   content: function (cb) {
     cb($(this).prop('title'));
-  },
+  }
 });
 $('.has-tooltip').removeClass('has-tooltip');
 
@@ -54,9 +55,9 @@ function saveEditName() {
       data: {
         action: 'saveName',
         id: $('#se_uwid_name_id').val(),
-        name: $('#se_uwid_name_txt').val(),
+        name: $('#se_uwid_name_txt').val()
       },
-      dataType: 'JSON',
+      dataType: 'JSON'
     }).done(displayCheckouts);
   } else {
     $('#se_uwid_name_txt').focus();
@@ -66,7 +67,7 @@ function validateId(id) {
   return id.match(/^\d{8}$/);
 }
 function submitIdSearch() {
-  idField = $('#se_uwid_id');
+  var idField = $('#se_uwid_id');
   if (validateId(idField.val())) {
     searchId(idField.val());
   } else {
@@ -82,13 +83,13 @@ function searchId(id) {
     type: 'POST',
     data: {
       action: 'getUwidCheckouts',
-      id: id,
+      id: id
     },
-    dataType: 'JSON',
+    dataType: 'JSON'
   }).done(displayCheckouts);
 }
 function submitItemSearch() {
-  itemField = $('#se_item_id');
+  var itemField = $('#se_item_id');
   if (itemField.val()) {
     searchItem(itemField.val());
   } else {
@@ -104,9 +105,9 @@ function searchItem(item) {
     type: 'POST',
     data: {
       action: 'getItemCheckouts',
-      item: item,
+      item: item
     },
-    dataType: 'JSON',
+    dataType: 'JSON'
   }).done(displayCheckouts);
 }
 function viewAllCheckouts() {
@@ -118,9 +119,9 @@ function viewAllCheckouts() {
     url: 'exec.php',
     type: 'POST',
     data: {
-      action: 'getAllCheckouts',
+      action: 'getAllCheckouts'
     },
-    dataType: 'JSON',
+    dataType: 'JSON'
   }).done(displayCheckouts);
 }
 function clearScreen() {
@@ -157,13 +158,13 @@ function displayCheckouts(resp) {
     checkoutPanel.show('blind');
     $('#co_item_uwid').focus();
   }
-  checkouts = resp.checkouts;
+  var checkouts = resp.checkouts || [];
   $.each(checkouts, function(i, co) {
-    uwid = $('<a>').text(co.uwid);
-    unam = $('<a>').text(co.name);
-    item = $('<a>').text(co.asset);
-    otime = document.createTextNode(co.out);
-    itime = co.in == null ? null : document.createTextNode(co.in);
+    var uwid = $('<a>').text(co.uwid),
+        unam = $('<a>').text(co.name),
+        item = $('<a>').text(co.asset),
+        otime = document.createTextNode(co.out),
+        itime = co.in == null ? null : document.createTextNode(co.in);
     uwid.on('dblclick', function() {
       searchId(co.uwid);
     });
@@ -180,14 +181,14 @@ function displayCheckouts(resp) {
     unam.addClass('has-tooltip');
     item.addClass('has-tooltip');
 
-    ci = $('<button>');
+    var ci = $('<button>');
     ci.addClass('btn has-tooltip');
     ci.on('blur mouseout', function() {
       $(this).removeClass('btn-confirm');
     });
 
-    tbody = null;
-    cols = [uwid, unam, item, otime];
+    var tbody = null,
+        cols = [uwid, unam, item, otime];
     if (co.in) {
       ci.text('Check Out');
       ci.attr('title', 'Click to check <strong>' + co.asset + '</strong> back out to <strong>' + co.name + '</strong>');
@@ -219,17 +220,17 @@ function displayCheckouts(resp) {
       tbody = $('#hist_cur_table > tbody');
     }
     cols.push(ci);
-    row = $('<tr>');
+    var row = $('<tr>');
     $.each(cols, function(i, s) {
       row.append($('<td>').append(s));
     });
-    tbody.append(row)
+    tbody.append(row);
   });
   $('#hist_panel').show('blind');
   $('.has-tooltip').tooltip({
     content: function (cb) {
       cb($(this).prop('title'));
-    },
+    }
   });
   $('.has-tooltip').removeClass('has-tooltip');
 }
@@ -274,11 +275,11 @@ $('#se_uwid_id, #co_item_uwid').autocomplete({
         action: 'getUwidList',
         q: r.term
       },
-      dataType: 'JSON',
+      dataType: 'JSON'
     }).done(function(resp) {
       cb($.map(resp, function(item) { return { label: item.id + ' \u2014 ' + item.name, value: item.id }; }));
     });
-  },
+  }
 });
 $('#se_item_id, #co_uwid_item').autocomplete({
   minLength: 0,
@@ -290,11 +291,11 @@ $('#se_item_id, #co_uwid_item').autocomplete({
         action: 'getItemList',
         q: r.term
       },
-      dataType: 'JSON',
+      dataType: 'JSON'
     }).done(function(resp) {
       cb($.map(resp, function(item) { return { label: item.name, value: item.name }; }));
     });
-  },
+  }
 });
 $('#se_uwid_id, #co_item_uwid, #se_item_id, #co_uwid_item').on('dblclick', function() {
   $(this).autocomplete("search");
@@ -308,9 +309,9 @@ function checkIn(uwid, coid) {
     data: {
       action: 'checkin',
       id: uwid,
-      coid: coid,
+      coid: coid
     },
-    dataType: 'JSON',
+    dataType: 'JSON'
   }).done(displayCheckouts);
 }
 function checkOut(uwid, asset) {
@@ -320,13 +321,13 @@ function checkOut(uwid, asset) {
     data: {
       action: 'checkout',
       id: uwid,
-      asset: asset,
+      asset: asset
     },
-    dataType: 'JSON',
+    dataType: 'JSON'
   }).done(displayCheckouts);
 }
 function submitCheckoutUwid() {
-  itemField = $('#co_uwid_item');
+  var itemField = $('#co_uwid_item');
   if (itemField.val()) {
     checkOut($('#co_uwid_uwid').val(), itemField.val());
   } else {
@@ -334,7 +335,7 @@ function submitCheckoutUwid() {
   }
 }
 function submitCheckoutItem() {
-  idField = $('#co_item_uwid');
+  var idField = $('#co_item_uwid');
   if (validateId(idField.val())) {
     checkOut(idField.val(), $('#co_item_name').val());
   } else {
@@ -344,7 +345,7 @@ function submitCheckoutItem() {
 }
 $('#co_uwid_submit').on('click', submitCheckoutUwid);
 $('#co_uwid_item').on('keydown', function(e) {
-  if (e.event == 13) /* ENTER */ {
+  if (e.event == 13 || e.keyCode == 13) /* ENTER */ {
     submitCheckoutUwid();
   }
 });
