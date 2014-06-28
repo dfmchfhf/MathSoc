@@ -29,6 +29,7 @@
   </head>
 
   <body>
+    <?php include 'menu.php'; ?>
     <div class="page">
       <div class="panel">
         <div class="panel-heading">

@@ -358,3 +358,42 @@ $('#co_item_uwid').on('keydown', function(e) {
     submitCheckoutItem();
   }
 });
+function sortByColumn(index, elem) {
+    var tbody = elem.find('tbody'),
+        rows = tbody.children('tr'),
+        sortFn = function (a, b) {
+            if (elem.data('sort') == 'ascending') {
+                return a > b;
+            } else {
+                return a < b;
+            }
+        };
+
+    if (elem.data('index') != index) {
+        elem.data('index', index);
+        elem.data('sort', 'ascending');
+    } else {
+        elem.data('sort',
+                  elem.data('sort') == 'ascending' ?
+                  'descending' :
+                  'ascending');
+    }
+
+    tbody.empty();
+    rows.sort(function (row1, row2) {
+        var col1, col2;
+        col1 = $(row1).children('td').eq(index).text();
+        col2 = $(row2).children('td').eq(index).text();
+        return sortFn(col1, col2);
+    }).appendTo(tbody);
+}
+$('table th').on('click', function () {
+    var index,
+        parentTable = $(this).parents('table').eq(0);
+
+    index = $(this).parent()
+                   .children()
+                   .index($(this));
+
+    sortByColumn(index, parentTable);
+});
