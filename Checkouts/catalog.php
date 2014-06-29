@@ -68,27 +68,25 @@
           </div>
         </div>
       </div>
-
+      <br/>
       <div class="panel">
         <div class="panel-heading">
           <h3 class="panel-title">Items</h3>
         </div>
-        <div class="panel-body">
-          <div class="asset_panel" class="panel-body">
-            <table id="asset_table" class="panel-table">
-              <caption><kbd>MathSoc's Item List</kbd></caption>
-              <thead>
-                <tr>
-                  <th><span>Name</span></th>
-                  <th><span>In Stock</span></th>
-                  <th><span>Total</span></th>
-                  <th><span>Checked Out To</span></th>
-                </tr>
-              </thead>
-              <tbody>
-              </tbody>
-            </table>
-          </div>
+        <div id="asset_panel" class="panel-body">
+          <table id="asset_table" class="panel-table">
+            <caption><kbd>MathSoc's Item List</kbd></caption>
+            <thead>
+              <tr>
+                <th><span>Name</span></th>
+                <th><span>In Stock</span></th>
+                <th><span>Total</span></th>
+                <th><span>Checked Out To</span></th>
+              </tr>
+            </thead>
+            <tbody>
+            </tbody>
+          </table>
         </div>
       </div>
     </div>

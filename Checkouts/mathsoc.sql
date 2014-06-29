@@ -71,10 +71,11 @@ CREATE TABLE IF NOT EXISTS `customers` (
 CREATE TABLE IF NOT EXISTS `candy` (
   `candy_id` int(11) NOT NULL AUTO_INCREMENT,
   `name` varchar(127) NOT NULL,
-  `cost` int(11) NOT NULL,
-  `total_time` int(32) NOT NULL,
-  `times_out` int(11) NOT NULL,
-  `current_run` int(32) NOT NULL,
+  `cost` Decimal(11) NOT NULL DEFAULT 0,
+  `total_time` bigint(32) NOT NULL DEFAULT 0,
+  `times_out` int(11) NOT NULL DEFAULT 0,
+  `current_run` bigint(32) NOT NULL DEFAULT 0,
+  KEY `name` (`name`),
   PRIMARY KEY (`candy_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 

@@ -76,6 +76,52 @@ function getUwidCheckouts($dbh, $id) {
   $result = array('type' => 'uwid', 'id' => $user['uwID'], 'name' => $user['name'], 'checkouts' => $checkouts);
   return $result;
 }
+function getAllCandy($dbh, $q, $candy) {
+  $cndy_stmt = '';
+  $candies = [];
+  if (isset($candy) && strlen($candy)) {
+    $cndy_stmt = $dbh->prepare(
+      'SELECT * '
+      . 'FROM `candy` '
+      . 'WHERE (`candy_id` = :id OR `name` = :id);'
+    );
+    $cndy_stmt->execute(array(":id" => $candy));
+  } else {
+    $cndy_stmt = $dbh->prepare(
+      'SELECT * '
+      . 'FROM `candy`; '
+    );
+    $cndy_stmt->execute();
+  }
+  $candies = $cndy_stmt->fetchAll();
+  if ($q !== null && strlen($q)) {
+    $searchwords = preg_split('/[ .-]+/', $q);
+    usort($searchwords, function($a, $b) {
+      return strlen($b) - strlen($a);
+    });
+    foreach ($candies as &$candy) {
+      $candywords = preg_split('/[ .-]+/', $candy['name']);
+      usort($candywords, function($a, $b) {
+        return strlen($b) - strlen($a);
+      });
+      $candy['score'] = scoreMatch($searchwords, $candywords);
+    }
+    $candies = array_filter($candies, function ($c) {
+      return $c['score'];
+    });
+    usort($candies, function($a, $b) {
+      return $b['score'] - $a['score'] ?
+          $b['score'] - $a['score'] :
+          $b['last'] > $a['last'];
+    }); /* HENRY WHAT YOU DOING */
+  }
+  $candy_list = array();
+  foreach ($candies as $ca) {
+    $candy_list[] = array('id' => $ca['candy_id'], 'name' => $ca['name'], 'cost' => $ca['cost'], 'time' => $ca['total_time'], 'runs' => $ca['times_out'], 'current_run' => $ca['current_run']);
+  }
+  $result = array('type' => 'candy', 'candies' => $candy_list);
+  return $result;
+}
 
 $action = strtolower(getFromRequest('action', 'getAllTransactions'));
 
@@ -363,6 +409,48 @@ switch($action) {
     $co_stmt->execute(array(":uwid" => $id, ":assetid" => $assetid));
     $result = getUwidCheckouts($dbh, $id);
     break; /* }}} */
+  case 'addcandy':
+    $candy = getFromRequest('name');
+    $cost = getFromRequest('cost');
+    $cndy_stmt = $dbh->prepare(
+      'INSERT INTO `candy`(`name`, `cost`) '
+      . 'VALUES (:name, :cost);'
+    );
+    $cndy_stmt->execute(array(":name" => $candy, ":cost" => $cost));
+    $result = getAllCandy($dbh, null, null);
+    break;
+  case 'putoutcandy':
+    $candy = getFromRequest('id');
+    $time = time() * 1000;
+    $cndy_stmt = $dbh->prepare(
+      'UPDATE `candy` '
+      . 'SET `current_run` = :time '
+      . 'WHERE `candy_id` = :id;'
+    );
+    $cndy_stmt->execute(array(":id" => $candy, ":time" => $time));
+    $result = getAllCandy($dbh, null, null);
+    break;
+  case 'pulloutcandy':
+    $candy = getFromRequest('id');
+    $time = time() * 1000;
+    $cndy_stmt = $dbh->prepare(
+      'UPDATE `candy` '
+      . 'SET `total_time` = `total_time` + (:time - `current_run`)'
+      . ', `times_out` = `times_out` + 1 '
+      . ', `current_run` = 0 '
+      . 'WHERE `candy_id` = :id;'
+    );
+    $cndy_stmt->execute(array(":id" => $candy, ":time" => $time));
+    $result = getAllCandy($dbh, null, null);
+    break;
+  case 'getallcandy':
+    $q = getFromRequest('q');
+    $candy = getFromRequest('id');
+    if (!isset($candy) || !strlen($candy)) {
+      $candy = getFromRequest('name');
+    }
+    $result = getAllCandy($dbh, $q, $candy);
+    break;
 }
 
 echo json_encode($result);

@@ -49,11 +49,11 @@
                   </button>
                 </span>
               </div>
+              <br/>
               <div id="se_uwid_name" class="input-group" style="display:none;">
                 <label class="input-group-item has-tooltip" for="se_uwid_name_txt" title="Name">
                   <span class="ui-icon ui-icon-comment">&nbsp;</span>
                 </label>
-                <br/>
                 <input id="se_uwid_name_id" type="hidden">
                 <input id="se_uwid_name_txt" class="form-control has-tooltip" readonly placeholder="Name" title="Double-click to edit">
                 <span class="input-group-btn">
@@ -77,16 +77,21 @@
               <img src="css/images/mathsoc.png" alt="profile-picture" />
             </div>
             <div class="profile_information cell-4 inline-block">
+              <h2 field="name"></h2>
               <div>
-                <span><strong>Favourite Item: </strong></span>
+                <span>Uwaterloo ID: </span>
+                <span field="uwid"></span>
+              </div>
+              <div>
+                <span>Favourite Item: </span>
                 <span field="fav"></span>
               </div>
               <div>
-                <span><strong>Items Currently Checked Out: </strong></span>
+                <span>Items Currently Checked Out: </span>
                 <span field="checkedout"></span>
               </div>
               <div>
-                <span><strong>Total Items Checked Out: </strong></span>
+                <span>Total Items Checked Out: </span>
                 <span field="total"></span>
               </div>
             </div>

@@ -1,4 +1,48 @@
 /*global $, jQuery, onCheckouts */
+RegExp.escape = function(s) {
+  return s.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
+};
+String.prototype.format = function () {
+  var patt,
+      string = this,
+      replacements = Array.prototype.slice.call(arguments, 0);
+
+  // For each replacement text, replace the appropriately index
+  // item
+  for (var i = 0; i < replacements.length; ++i) {
+    patt = new RegExp(RegExp.escape('{' + i + '}'), 'g');
+    string = string.replace(patt, replacements[i]);
+  }
+  return string;
+};
+function getQueryParam(query) {
+  var result = undefined,
+      params = window.location.search;
+  params = params.split(/[&\?]/);
+  $.each(params, function(i, p) {
+    var q, v;
+    p = p.split(/[=]/);
+    q = p[0];
+    v = p[1];
+    if (q === query) {
+      result = v;
+      return false;
+    }
+    return true;
+  });
+  return result;
+}
+function dateString(milliseconds) {
+  var time, day, month, hour, minute, year;
+  time = new Date(milliseconds);
+  day = time.getDate();
+  month = time.getMonth();
+  hour = time.getHours() < 10 ? "0" + time.getHours() : time.getHours();
+  minute = time.getMinutes() < 10 ? "0" + time.getMinutes() : time.getMinutes();
+  year = time.getFullYear();
+  return "{0}-{1}-{2} {3}:{4}".format(year, month, day, hour, minute);
+}
+
 $('.panel-collapsible > .panel-heading').on('click', function() {
   $(this).siblings('.panel-body').toggle('blind');
 });

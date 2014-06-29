@@ -1,37 +1,4 @@
-/*global $, jQuery, searchId */
-RegExp.escape = function(s) {
-  return s.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
-};
-String.prototype.format = function () {
-  var patt,
-      string = this,
-      replacements = Array.prototype.slice.call(arguments, 0);
-
-  // For each replacement text, replace the appropriately index
-  // item
-  for (var i = 0; i < replacements.length; ++i) {
-    patt = new RegExp(RegExp.escape('{' + i + '}'), 'g');
-    string = string.replace(patt, replacements[i]);
-  }
-  return string;
-};
-function getQueryParam(query) {
-  var result = undefined,
-      params = window.location.search;
-  params = params.split(/[&\?]/);
-  $.each(params, function(i, p) {
-    var q, v;
-    p = p.split(/[=]/);
-    q = p[0];
-    v = p[1];
-    if (q === query) {
-      result = v;
-      return false;
-    }
-    return true;
-  });
-  return result;
-}
+/*global $, jQuery, searchId, getQueryParam */
 function searchForUser(id, callback) {
   $.ajax({
     url: 'exec.php',
@@ -68,6 +35,9 @@ function onCheckouts(data) {
     total++;
   });
 
+  console.log(fav.obj);
+  $('[field="name"]').text(fav.obj.name);
+  $('[field="uwid"]').text(fav.obj.uwid);
   $('[field="fav"]').text(fav.obj.asset);
   $('[field="checkedout"]').text(current);
   $('[field="total"]').text(total);
