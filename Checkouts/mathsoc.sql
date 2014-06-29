@@ -29,6 +29,8 @@ SET time_zone = "+00:00";
 CREATE TABLE IF NOT EXISTS `assets` (
   `asset_id` int(11) NOT NULL AUTO_INCREMENT,
   `name` varchar(127) NOT NULL,
+  `total` int(11) NOT NULL DEFAULT 1,
+  `stock` int(11) NOT NULL DEFAULT 1,
   PRIMARY KEY (`asset_id`)
 ) ENGINE=InnoDB  DEFAULT CHARSET=latin1;
 
@@ -66,13 +68,13 @@ CREATE TABLE IF NOT EXISTS `customers` (
 --
 -- Table structure for table `candy`
 --
-CREATE TABLE IF NOT EXISTS 'candy' (
+CREATE TABLE IF NOT EXISTS `candy` (
+  `candy_id` int(11) NOT NULL AUTO_INCREMENT,
   `name` varchar(127) NOT NULL,
-  `cost` int(5) NOT NULL,
+  `cost` int(11) NOT NULL,
   `total_time` int(32) NOT NULL,
   `times_out` int(11) NOT NULL,
   `current_run` int(32) NOT NULL,
-  `candy_id` int(11) NOT NULL AUTO_INCREMENT,
   PRIMARY KEY (`candy_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 

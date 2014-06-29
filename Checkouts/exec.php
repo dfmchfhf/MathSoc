@@ -230,6 +230,57 @@ switch($action) {
     }
     $result = array('type' => 'plain', 'checkouts' => $checkouts);
     break;/* }}} */
+  case 'getitems':
+    $get_asset_stmt = '';
+    $assets = array();
+    $items = null;
+    $item = getFromRequest('item');
+    if (isset($item) && strlen($item)) {
+      $get_item_stmt = $dbh->prepare(
+        'SELECT * '
+        . 'FROM `assets` '
+        . 'WHERE `name` = :name;'
+      );
+      $get_item_stmt->execute(array(':name' => $item));
+      $asset = $get_item_stmt->fetch();
+      if ($asset !== false) {
+        $get_asset_stmt = $dbh->prepare(
+          'SELECT o.`asset_id`, o.`name`, o.`stock`, o.`total`, GROUP_CONCAT(c.`uwID`) AS students '
+          .' FROM `assets` o '
+          .' LEFT JOIN `checkouts` c'
+          .'   ON c.`asset_id` = :assetid '
+          .'   AND c.`checkin` IS NULL '
+          .' WHERE o.`asset_id` = :assetid '
+          .' GROUP BY o.`asset_id` '
+          .' ORDER BY o.name;'
+        );
+        $get_asset_stmt->execute(array(':assetid' => $asset['asset_id']));
+        $assets = $get_asset_stmt->fetchAll();
+      }
+    } else {
+      $get_asset_stmt = $dbh->prepare(
+        'SELECT o.`asset_id`, o.`name`, o.`stock`, o.`total`, GROUP_CONCAT(c.`uwID`) AS students '
+        .' FROM `assets` o '
+        .' LEFT JOIN `checkouts` c'
+        .'   ON c.`asset_id` = o.`asset_id` '
+        .'   AND c.`checkin` IS NULL '
+        .' GROUP BY o.`asset_id` '
+        .' ORDER BY o.name;'
+      );
+      $get_asset_stmt->execute();
+      $assets = $get_asset_stmt->fetchAll();
+    }
+
+    foreach ($assets as $asset) {
+      if (!$asset['students'] || !strlen($asset['students'])) {
+        $asset['students'] = [];
+      } else {
+        $asset['students'] = explode(",", $asset['students']);
+      }
+      $items[] = array('id' => $asset['asset_id'], 'stock' => intval($asset['stock']), 'total' => intval($asset['total']), 'students' => $asset['students'], 'name' => $asset['name']);
+    }
+    $result = array('type' => 'plain', 'items' => $items);
+    break;
   case 'checkin': /* {{{ */
     $id = getFromRequest('id');
     if (!preg_match('/^\\d{8}$/',$id)) {
@@ -237,11 +288,24 @@ switch($action) {
     }
     $co_id = getFromRequest('coid');
     $ci_stmt = $dbh->prepare(
+      'SELECT * '
+      . 'FROM `checkouts` '
+      . 'WHERE `checkout_id` = :co;'
+    );
+    $ci_stmt->execute(array(":co" => $co_id));
+    $checkout = $ci_stmt->fetch();
+    $ci_stmt = $dbh->prepare(
       'UPDATE `checkouts` '
       . 'SET `checkin` = NOW() '
       . 'WHERE `uwID` = :uwID AND `checkout_id` = :co AND `checkin` IS NULL'
     );
     $ci_stmt->execute(array(":uwID" => $id, ":co" => $co_id));
+    $asset_stmt = $dbh->prepare(
+      'UPDATE `assets` '
+      . 'SET `stock`=`stock`+1 '
+      . 'WHERE `asset_id` = :assetid;'
+    );
+    $asset_stmt->execute(array(":assetid" => $checkout['asset_id']));
     $result = getUwidCheckouts($dbh, $id);
     break; /* }}} */
   case 'checkout': /* {{{ */
@@ -251,7 +315,7 @@ switch($action) {
     }
     $asset_name = getFromRequest('asset');
     $asset_stmt = $dbh->prepare(
-      'SELECT asset_id '
+      'SELECT * '
       . 'FROM `assets` '
       . 'WHERE `name` = :name;'
     );
@@ -259,10 +323,21 @@ switch($action) {
     $asset_res = $asset_stmt->fetch();
     if ($asset_res === false) {
       $asset_inst = $dbh->prepare(
-        'INSERT INTO `assets`(`name`) '
-        . 'VALUES (:name);'
+        'INSERT INTO `assets`(`name`, `stock`, `total`) '
+        . 'VALUES (:name, 0, 1);'
       );
       $asset_inst->execute(array(":name" => $asset_name));
+      $asset_stmt->execute(array(":name" => $asset_name));
+      $asset_res = $asset_stmt->fetch();
+    } else {
+      $total = $asset_res['total'] + ($asset_res['stock'] == 0 ? 1 : 0);
+      $stock = $asset_res['stock'] - ($asset_res['stock'] == 0 ? 0 : 1);
+      $asset_inst = $dbh->prepare(
+        'UPDATE `assets` '
+        . 'SET `stock` = :stock ,`total` = :total '
+        . 'WHERE `name` = :name AND `asset_id` = :assetid;'
+      );
+      $asset_inst->execute(array(":name" => $asset_name, ":stock" => $stock, ":total" => $total, ":assetid" => $asset_res['asset_id']));
       $asset_stmt->execute(array(":name" => $asset_name));
       $asset_res = $asset_stmt->fetch();
     }

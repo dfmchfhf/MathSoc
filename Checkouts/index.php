@@ -130,29 +130,29 @@
         </div>
         <div id="hist_panel" class="panel-body">
           <table id="hist_cur_table" class="panel-table">
-            <caption>Items currently checked out:</caption>
+            <caption><kbd>Items currently checked out:</kbd></caption>
             <thead>
               <tr>
-                <th>uwID</th>
-                <th>Name</th>
-                <th>Item</th>
-                <th>Checkout time</th>
-                <th>Check item in</th>
+                <th><span>uwID</span></th>
+                <th><span>Name</span></th>
+                <th><span>Item</span></th>
+                <th><span>Checkout time</span></th>
+                <th><span>Check item in</span></th>
               </tr>
             </thead>
             <tbody>
             </tbody>
           </table>
           <table id="hist_prev_table" class="panel-table">
-            <caption>History:</caption>
+            <caption><kbd>History:</kbd></caption>
             <thead>
               <tr>
-                <th>uwID</th>
-                <th>Name</th>
-                <th>Item</th>
-                <th>Checkout time</th>
-                <th>Checkin time</th>
-                <th>Check item back out</th>
+                <th><span>uwID</span></th>
+                <th><span>Name</span></th>
+                <th><span>Item</span></th>
+                <th><span>Checkout time</span></th>
+                <th><span>Checkin time</span></th>
+                <th><span>Check item back out</span></th>
               </tr>
             </thead>
             <tbody>

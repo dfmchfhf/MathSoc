@@ -44,30 +44,54 @@
                 </label>
                 <input id="se_asset_name" class="form-control" placeholder="Enter the item name">
                 <span class="input-group-btn">
-                  <button id="se_asset_name" class="btn">
+                  <button id="se_asset_search" class="btn">
                     <span class="ui-icon ui-icon-search">&nbsp;</span>
                   </button>
                 </span>
               </div>
             </div>
             <div class="cell-2">
-              <button id="view_all_items" class="btn">
+              <button class="view_assets btn" data-fn="all">
                 View All Items
               </button>
             </div>
             <div class="cell-2">
-              <button id="view_all_items_checkedout" class="btn">
+              <button class="view_assets btn" data-fn="out-stock">
                 View All Items Not in Stock
               </button>
             </div>
             <div class="cell-2">
-              <button id="view_all_items_checkedin" class="btn">
+              <button class="view_assets btn" data-fn="in-stock">
                 View All Items in Stock
               </button>
             </div>
           </div>
         </div>
       </div>
+
+      <div class="panel">
+        <div class="panel-heading">
+          <h3 class="panel-title">Items</h3>
+        </div>
+        <div class="panel-body">
+          <div class="asset_panel" class="panel-body">
+            <table id="asset_table" class="panel-table">
+              <caption><kbd>MathSoc's Item List</kbd></caption>
+              <thead>
+                <tr>
+                  <th><span>Name</span></th>
+                  <th><span>In Stock</span></th>
+                  <th><span>Total</span></th>
+                  <th><span>Checked Out To</span></th>
+                </tr>
+              </thead>
+              <tbody>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
     </div>
+    <script src="js/checkouts.js"></script>
   </body>
 </html>
