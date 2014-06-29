@@ -1,4 +1,4 @@
-/*global $, jQuery */
+/*global $, jQuery, onCheckouts */
 $('.panel-collapsible > .panel-heading').on('click', function() {
   $(this).siblings('.panel-body').toggle('blind');
 });
@@ -124,6 +124,9 @@ function viewAllCheckouts() {
     dataType: 'JSON'
   }).done(displayCheckouts);
 }
+function viewProfile(id) {
+  window.location = '/people.php?id=' + id;
+}
 function clearScreen() {
   hideEditName();
   checkoutPanel.hide();
@@ -166,10 +169,10 @@ function displayCheckouts(resp) {
         otime = document.createTextNode(co.out),
         itime = co.in == null ? null : document.createTextNode(co.in);
     uwid.on('dblclick', function() {
-      searchId(co.uwid);
+      viewProfile(co.uwid);
     });
     unam.on('dblclick', function() {
-      searchId(co.uwid);
+      viewProfile(co.uwid);
     });
     item.on('dblclick', function() {
       searchItem(co.asset);
@@ -233,6 +236,10 @@ function displayCheckouts(resp) {
     }
   });
   $('.has-tooltip').removeClass('has-tooltip');
+
+  if (typeof onCheckouts == 'function') {
+    onCheckouts(resp);
+  }
 }
 $('#se_uwid_id').on('input propertychange paste autocompleteselect', function() {
   hideEditName();

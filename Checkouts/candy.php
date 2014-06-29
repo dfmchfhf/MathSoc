@@ -18,7 +18,7 @@
 ?>
 <html lang="en">
   <head>
-    <title>MathSoc Candy</title>
+    <title>MathSoc Candy Catalog</title>
     <meta content="text/html; charset=UTF-8" http-equiv="Content-Type">
     <link rel="stylesheet" href="css/jquery-ui-1.10.4.custom.min.css">
     <link rel="stylesheet" href="css/checkouts.css">
@@ -31,11 +31,39 @@
   <body>
     <?php include 'menu.php'; ?>
     <div class="page">
+
+      <div class="panel panel-collapsible collapsed">
+        <div class="panel-heading">
+          <h3 class="panel-title">Search Candy</h3>
+        </div>
+        <div class="panel-body">
+        </div>
+      </div>
+
+      <div class="panel panel-collapsible collapsed">
+        <div class="panel-heading">
+          <h3 class="panel-title">Add Candy</h3>
+        </div>
+        <div class="panel-body">
+        </div>
+      </div>
+
       <div class="panel">
         <div class="panel-heading">
           <h3 class="panel-title">Current Candy</h3>
         </div>
+        <div class="panel-body">
+        </div>
       </div>
+
+      <div class="panel">
+        <div class="panel-heading">
+          <h3 class="panel-title">All Candy</h3>
+        </div>
+        <div class="panel-body">
+        </div>
+      </div>
+
     </div>
   </body>
 </html>
