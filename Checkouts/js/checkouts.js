@@ -1,4 +1,48 @@
-/*global $, jQuery */
+/*global $, jQuery, onCheckouts */
+RegExp.escape = function(s) {
+  return s.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
+};
+String.prototype.format = function () {
+  var patt,
+      string = this,
+      replacements = Array.prototype.slice.call(arguments, 0);
+
+  // For each replacement text, replace the appropriately index
+  // item
+  for (var i = 0; i < replacements.length; ++i) {
+    patt = new RegExp(RegExp.escape('{' + i + '}'), 'g');
+    string = string.replace(patt, replacements[i]);
+  }
+  return string;
+};
+function getQueryParam(query) {
+  var result = undefined,
+      params = window.location.search;
+  params = params.split(/[&\?]/);
+  $.each(params, function(i, p) {
+    var q, v;
+    p = p.split(/[=]/);
+    q = p[0];
+    v = p[1];
+    if (q === query) {
+      result = v;
+      return false;
+    }
+    return true;
+  });
+  return result;
+}
+function dateString(milliseconds) {
+  var time, day, month, hour, minute, year;
+  time = new Date(milliseconds);
+  day = time.getDate();
+  month = time.getMonth();
+  hour = time.getHours() < 10 ? "0" + time.getHours() : time.getHours();
+  minute = time.getMinutes() < 10 ? "0" + time.getMinutes() : time.getMinutes();
+  year = time.getFullYear();
+  return "{0}-{1}-{2} {3}:{4}".format(year, month, day, hour, minute);
+}
+
 $('.panel-collapsible > .panel-heading').on('click', function() {
   $(this).siblings('.panel-body').toggle('blind');
 });
@@ -124,6 +168,9 @@ function viewAllCheckouts() {
     dataType: 'JSON'
   }).done(displayCheckouts);
 }
+function viewProfile(id) {
+  window.location = '/people.php?id=' + id;
+}
 function clearScreen() {
   hideEditName();
   checkoutPanel.hide();
@@ -166,10 +213,10 @@ function displayCheckouts(resp) {
         otime = document.createTextNode(co.out),
         itime = co.in == null ? null : document.createTextNode(co.in);
     uwid.on('dblclick', function() {
-      searchId(co.uwid);
+      viewProfile(co.uwid);
     });
     unam.on('dblclick', function() {
-      searchId(co.uwid);
+      viewProfile(co.uwid);
     });
     item.on('dblclick', function() {
       searchItem(co.asset);
@@ -233,6 +280,10 @@ function displayCheckouts(resp) {
     }
   });
   $('.has-tooltip').removeClass('has-tooltip');
+
+  if (typeof onCheckouts == 'function') {
+    onCheckouts(resp);
+  }
 }
 $('#se_uwid_id').on('input propertychange paste autocompleteselect', function() {
   hideEditName();
@@ -281,7 +332,7 @@ $('#se_uwid_id, #co_item_uwid').autocomplete({
     });
   }
 });
-$('#se_item_id, #co_uwid_item').autocomplete({
+$('#se_item_id, #co_uwid_item, #se_asset_name').autocomplete({
   minLength: 0,
   source: function(r, cb) {
     $.ajax({
@@ -297,7 +348,7 @@ $('#se_item_id, #co_uwid_item').autocomplete({
     });
   }
 });
-$('#se_uwid_id, #co_item_uwid, #se_item_id, #co_uwid_item').on('dblclick', function() {
+$('#se_uwid_id, #co_item_uwid, #se_item_id, #co_uwid_item, #se_asset_name').on('dblclick', function() {
   $(this).autocomplete("search");
 });
 $('#view_all').on('click', viewAllCheckouts);
@@ -357,4 +408,127 @@ $('#co_item_uwid').on('keydown', function(e) {
   if (e.event == 13) /* ENTER */ {
     submitCheckoutItem();
   }
+});
+function sortByColumn(index, elem) {
+  var table = elem.parents('table').eq(0),
+      tbody = table.find('tbody'),
+      rows = tbody.children('tr'),
+      carat = $('<span/>', {
+        'class': "ui-icon"
+      }),
+      sortFn = function (a, b) {
+        if (table.data('sort') == 'ascending') {
+            return a > b;
+        } else {
+            return a < b;
+        }
+      };
+
+  table.find('th .ui-icon').remove();
+  if (table.data('index') != index) {
+    table.data('index', index);
+    table.data('sort', 'ascending');
+    carat.addClass('ui-icon-carat-1-n');
+  } else {
+    if (table.data('sort') == 'ascending') {
+      table.data('sort', 'descending');
+      carat.addClass('ui-icon-carat-1-s');
+    } else {
+      table.data('sort', 'ascending');
+      carat.addClass('ui-icon-carat-1-n');
+    }
+  }
+
+  carat.addClass('inline-block')
+        .addClass('sort-icon')
+        .appendTo(elem);
+  tbody.empty();
+  rows.sort(function (row1, row2) {
+    var col1, col2;
+    col1 = $(row1).children('td').eq(index).text();
+    col2 = $(row2).children('td').eq(index).text();
+    return sortFn(col1, col2);
+  }).appendTo(tbody);
+}
+$('table th').on('click', function () {
+  var index;
+
+  index = $(this).parent()
+        .children()
+        .index($(this));
+  sortByColumn(index, $(this));
+});
+function searchItems(callback, data) {
+  $.ajax({
+    url: 'exec.php',
+    type: 'POST',
+    data: $.extend({}, data, {
+        action: 'getItems'
+    }),
+    dataType: 'JSON'
+  }).done(callback);
+}
+function displayItems(data, filterFn) {
+  var tbody,
+      items = data.items || [],
+      table = $('#asset_table');
+
+  if (filterFn && typeof filterFn == 'function') {
+    items = items.filter(filterFn);
+  }
+
+  tbody = table.find('tbody');
+  tbody.empty();
+  items = items.map(function (item, index) {
+    var students = item.students || [],
+        row = $('<tr/>'),
+        col = $('<td/>');
+
+    students = students.map(function (student, i) {
+      var a = $('<a/>');
+      a.attr('href', "/people.php?id=" + student);
+      a.text(student);
+      return a[0].outerHTML;
+    });
+
+    col.clone().text(item.name).appendTo(row);
+    col.clone().text(item.stock).appendTo(row);
+    col.clone().text(item.total).appendTo(row);
+    col.append($(students.join(', ')));
+    col.appendTo(row);
+    return row[0].outerHTML;
+  });
+  tbody.append($(items.join('')));
+}
+$('#se_asset_search').on('click', function (ev) {
+  $('.view_assets').removeClass('selected');
+  searchItems(displayItems, {
+    'item': $('#se_asset_name').val()
+  });
+});
+$('#se_asset_name').on('keydown', function (ev) {
+  if (ev.keyCode == 13) {
+    $('#se_asset_search').click();
+  }
+});
+$('.view_assets').on('click', function (ev) {
+  var fn, filter;
+
+  $('.view_assets').removeClass('selected');
+  $('#se_asset_name').val('');
+  fn = $(this).addClass('selected')
+              .data('fn');
+
+  filter = function (item) {
+    if (fn == "out-stock") {
+      return item.stock == 0;
+    } else if (fn == "in-stock") {
+      return item.stock > 0;
+    }
+    return true;
+  };
+
+  searchItems(function (data) {
+    displayItems(data, filter);
+  });
 });

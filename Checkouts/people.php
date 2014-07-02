@@ -1,6 +1,6 @@
 <?php
 /*
-    Copyright (C) 2014 Henry Fung
+    Copyright (C) 2014 Ford Peprah
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -18,7 +18,7 @@
 ?>
 <html lang="en">
   <head>
-    <title>MathSoc Signouts</title>
+    <title>People</title>
     <meta content="text/html; charset=UTF-8" http-equiv="Content-Type">
     <link rel="stylesheet" href="css/jquery-ui-1.10.4.custom.min.css">
     <link rel="stylesheet" href="css/checkouts.css">
@@ -33,7 +33,7 @@
     <div class="page">
       <div class="panel">
         <div class="panel-heading">
-          <h3 class="panel-title">1. Search</h3>
+          <h3 class="panel-title">Search</h3>
         </div>
         <div class="panel-body">
           <div class="container container-fluid">
@@ -49,6 +49,7 @@
                   </button>
                 </span>
               </div>
+              <br/>
               <div id="se_uwid_name" class="input-group" style="display:none;">
                 <label class="input-group-item has-tooltip" for="se_uwid_name_txt" title="Name">
                   <span class="ui-icon ui-icon-comment">&nbsp;</span>
@@ -62,73 +63,40 @@
                 </span>
               </div>
             </div>
-            <div class="cell-4">
-              <div class="input-group">
-                <label class="input-group-item has-tooltip" for="se_item_id" title="Item">
-                  <span class="ui-icon ui-icon-calculator">&nbsp;</span>
-                </label>
-                <input id="se_item_id" class="form-control" placeholder="Search items">
-                <span class="input-group-btn">
-                  <button id="se_item_submit" class="btn">
-                    <span class="ui-icon ui-icon-search">&nbsp;</span>
-                  </button>
-                </span>
-              </div>
-            </div>
-            <div class="cell-2">
-              <button id="view_all" class="btn">
-                View All Checkouts
-              </button>
-            </div>
           </div>
         </div>
       </div>
-
+      <br/>
       <div class="panel panel-collapsible collapsed">
         <div class="panel-heading">
-          <h3 class="panel-title">2. Check out</h3>
-        </div>
-        <div id="co_panel" class="panel-body">
-          <div id="co_uwid" class="container container-fluid">
-            <div class="cell-10">
-              <div class="input-group">
-                <label class="input-group-item" for="co_uwid_item">
-                  Check out to <strong id="co_uwid_user">user</strong>
-                </label>
-                <input id="co_uwid_uwid" type="hidden">
-                <input id="co_uwid_item" class="form-control" placeholder="Item to check out; please enter each item in a separate line">
-                <span class="input-group-btn">
-                  <button id="co_uwid_submit" class="btn">
-                    <span class="ui-icon ui-icon-carat-1-e">&nbsp;</span>
-                  </button>
-                </span>
-              </div>
-            </div>
-          </div>
-          <div id="co_item" class="container container-fluid">
-            <div class="cell-10">
-              <div class="input-group">
-                <label class="input-group-item" for="co_item_uwid">
-                  Check out <strong id="co_item_item">item</strong> to
-                </label>
-                <input id="co_item_name" type="hidden">
-                <input id="co_item_uwid" class="form-control" placeholder="uwID (pad WatSFiC IDs with 0s), or search by name">
-                <span class="input-group-btn">
-                  <button id="co_item_submit" class="btn">
-                    <span class="ui-icon ui-icon-carat-1-e">&nbsp;</span>
-                  </button>
-                </span>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div class="panel panel-collapsible collapsed">
-        <div class="panel-heading">
-          <h3 class="panel-title">Checkouts History</h3>
+          <h3 class="panel-title">Profile</h3>
         </div>
         <div id="hist_panel" class="panel-body">
+          <div id="profile_panel" class="profile">
+            <div class="profile_picture cell-2 inline-block">
+              <img src="css/images/mathsoc.png" alt="profile-picture" />
+            </div>
+            <div class="profile_information cell-4 inline-block">
+              <h2 field="name"></h2>
+              <div>
+                <span>Uwaterloo ID: </span>
+                <span field="uwid"></span>
+              </div>
+              <div>
+                <span>Favourite Item: </span>
+                <span field="fav"></span>
+              </div>
+              <div>
+                <span>Items Currently Checked Out: </span>
+                <span field="checkedout"></span>
+              </div>
+              <div>
+                <span>Total Items Checked Out: </span>
+                <span field="total"></span>
+              </div>
+            </div>
+          </div>
+          <hr/>
           <table id="hist_cur_table" class="panel-table">
             <caption><kbd>Items currently checked out:</kbd></caption>
             <thead>
@@ -160,8 +128,9 @@
           </table>
         </div>
       </div>
-    </div>
 
+    </div>
     <script src="js/checkouts.js"></script>
+    <script src="js/people.js"></script>
   </body>
 </html>
