@@ -55,7 +55,7 @@ function displayCandy(res) {
       });
       average = c.time / Math.max(c.runs, 1) / (1000 * 60);
       average = new Number(average);
-      cpt = (c.cost * c.runs) / (c.time / (1000 * 60));
+      cpt = c.time == 0 ? 0 : (c.cost * c.runs) / (c.time / (1000 * 60));
       cpt = new Number(cpt);
       row.append($(fmt.format(c.name, c.cost.toPrecision(2), average.toPrecision(2), cpt.toPrecision(2))))
          .append($('<td/>').append(btn))

@@ -52,7 +52,7 @@ function getUwidCheckouts($dbh, $id) {
 
   $user = $get_user_stmt->fetch();
 
-  $checkouts = null;
+  $checkouts = array();
   if ($user) {
     $get_co_stmt = $dbh->prepare(
       'SELECT o.`checkout_id`, o.`uwID`, c.`name`, a.`name` AS `asset`, o.`checkout`, o.`checkin` '

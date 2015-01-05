@@ -33,7 +33,7 @@
     <div class="page">
       <div class="panel">
         <div class="panel-heading">
-          <h3 class="panel-title">1. Search</h3>
+          <h3 class="panel-title">Search</h3>
         </div>
         <div class="panel-body">
           <div class="container container-fluid">
@@ -84,11 +84,13 @@
         </div>
       </div>
 
-      <div class="panel panel-collapsible collapsed">
+      <br/>
+
+      <div id="co_panel" class="panel panel-collapsible collapsed">
         <div class="panel-heading">
-          <h3 class="panel-title">2. Check out</h3>
+          <h3 class="panel-title">Check out</h3>
         </div>
-        <div id="co_panel" class="panel-body">
+        <div class="panel-body">
           <div id="co_uwid" class="container container-fluid">
             <div class="cell-10">
               <div class="input-group">
@@ -124,11 +126,13 @@
         </div>
       </div>
 
-      <div class="panel panel-collapsible collapsed">
+      <br/>
+
+      <div id="hist_panel" class="panel panel-collapsible collapsed">
         <div class="panel-heading">
           <h3 class="panel-title">Checkouts History</h3>
         </div>
-        <div id="hist_panel" class="panel-body">
+        <div class="panel-body">
           <table id="hist_cur_table" class="panel-table">
             <caption><kbd>Items currently checked out:</kbd></caption>
             <thead>

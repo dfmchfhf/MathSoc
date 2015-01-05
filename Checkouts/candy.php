@@ -54,6 +54,7 @@
           </div>
         </div>
       </div>
+      <br/>
       <div class="panel panel-collapsible collapsed">
         <div class="panel-heading">
           <h3 class="panel-title">Add Candy</h3>

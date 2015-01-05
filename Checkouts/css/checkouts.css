@@ -12,11 +12,17 @@ button, input, optgroup, select, textarea {
   margin:                     0;
   width:                      100%;
 }
-table tr {
+a,
+button {
   cursor:                     pointer;
 }
 table tr > th:hover {
-  background-color:           #999999;
+  cursor:                     pointer;
+  background-color:           #F3F3F3;
+}
+table tr button,
+table tr a {
+  cursor:                     pointer;
 }
 input[readonly]{
   background-color:           #ddd;
@@ -81,10 +87,11 @@ hr {
   margin:                     0;
   padding:                    0;
   border-color:               #999999;
+  border-size:                0px;
 }
 .nav > ul > li {
   display:                    inline-block;
-  border-right:               1px solid #DDD;
+  border-right:               0px solid #DDD;
 }
 .nav > ul > li > a {
   color:                      #C0C0C0;
@@ -96,7 +103,7 @@ hr {
   padding:                    0px 30px;
 }
 .nav > ul > li > a:hover {
-  color:                      #F9F9F9;
+  color:                      #07c;
   background-color:           transparent;
 }
 .nav > ul > li > a:hover, a:visited {
@@ -192,6 +199,12 @@ hr {
 .panel-body {
   padding:                    12px;
 }
+.panel-collapsible > .panel-heading {
+  cursor:                     pointer;
+}
+.panel-collapsible.collapsed > .panel-heading {
+  border-radius:              6px;
+}
 .panel-collapsible.collapsed > .panel-body {
   display:                    none;
 }
@@ -210,9 +223,6 @@ hr {
   text-align:                 left;
   font-weight:                bold;
   margin-bottom:              10px;
-}
-.panel-table > tr:hover, .panel-table > * > tr:hover {
-  background-color:           #f5f5f5;
 }
 .panel-table > tr > th, .panel-table > * > tr > th {
   border-bottom:              2px solid #ddd;

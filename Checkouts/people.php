@@ -66,15 +66,17 @@
           </div>
         </div>
       </div>
+
       <br/>
-      <div class="panel panel-collapsible collapsed">
+
+      <div id="profile_panel" class="panel panel-collapsible collapsed">
         <div class="panel-heading">
           <h3 class="panel-title">Profile</h3>
         </div>
-        <div id="hist_panel" class="panel-body">
-          <div id="profile_panel" class="profile">
+        <div class="panel-body">
+          <div class="profile">
             <div class="profile_picture cell-2 inline-block">
-              <img src="css/images/mathsoc.png" alt="profile-picture" />
+              <img src="css/images/mathsoc.png" field="picture" alt="profile-picture" />
             </div>
             <div class="profile_information cell-4 inline-block">
               <h2 field="name"></h2>

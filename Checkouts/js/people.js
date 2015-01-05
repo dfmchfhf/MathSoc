@@ -10,13 +10,16 @@ function searchForUser(id, callback) {
     dataType: 'JSON'
   }).done(callback);
 }
+
+var profilePanel = $('#profile_panel');
+
 function onCheckouts(data) {
   var fav = null,
       occs = {},
       total = 0,
       current = 0;
   $('title').text('{0} | People'.format(data.id));
-  $.each(data.checkouts, function(index, co) {
+  $.each(data.checkouts || [], function(index, co) {
     if (occs[co.asset]) {
       occs[co.asset]['count'] += 1;
     } else {
@@ -35,15 +38,20 @@ function onCheckouts(data) {
     total++;
   });
 
-  console.log(fav.obj);
-  $('[field="name"]').text(fav.obj.name);
-  $('[field="uwid"]').text(fav.obj.uwid);
-  $('[field="fav"]').text(fav.obj.asset);
+  $('[field="name"]').text(data.name);
+  $('[field="uwid"]').text(data.id);
+  $('[field="fav"]').text(fav ? fav.obj.asset : '--');
   $('[field="checkedout"]').text(current);
   $('[field="total"]').text(total);
+  if (data.image) {
+    $('[field="picture"]').attr('src', data.image);
+  }
+  profilePanel.show('blind');
+  profilePanel.children('.panel-body').show('blind');
 }
 
 $('document').ready(function() {
   var id = getQueryParam('id');
+  profilePanel.hide();
   searchId(id);
 });
