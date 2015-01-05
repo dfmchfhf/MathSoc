@@ -49,7 +49,6 @@
                   </button>
                 </span>
               </div>
-              <br/>
               <div id="se_uwid_name" class="input-group" style="display:none;">
                 <label class="input-group-item has-tooltip" for="se_uwid_name_txt" title="Name">
                   <span class="ui-icon ui-icon-comment">&nbsp;</span>

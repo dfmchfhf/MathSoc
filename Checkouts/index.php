@@ -65,7 +65,7 @@
             <div class="cell-4">
               <div class="input-group">
                 <label class="input-group-item has-tooltip" for="se_item_id" title="Item">
-                  <span class="ui-icon ui-icon-calculator">&nbsp;</span>
+                  <span class="ui-icon ui-icon-image">&nbsp;</span>
                 </label>
                 <input id="se_item_id" class="form-control" placeholder="Search items">
                 <span class="input-group-btn">

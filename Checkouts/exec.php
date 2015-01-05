@@ -17,7 +17,7 @@
 */
 
 function getFromRequest($k, $d = null) {
-  return isset($_REQUEST[$k]) ? $_REQUEST[$k] : $d;
+  return isset($_POST[$k]) ? $_POST[$k] : $d;
 }
 function error($msg) {
   die();

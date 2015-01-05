@@ -57,12 +57,12 @@
             </div>
             <div class="cell-2">
               <button class="view_assets btn" data-fn="out-stock">
-                View All Items Not in Stock
+                View All Not in Stock
               </button>
             </div>
             <div class="cell-2">
               <button class="view_assets btn" data-fn="in-stock">
-                View All Items in Stock
+                View All in Stock
               </button>
             </div>
           </div>
