@@ -1,7 +1,10 @@
-MathSoc
+Checkouts
 =======
 
-# Checkouts
+Checkouts is a program used for keeping track of board-games, books, etc. leant out to students.
+
+It is run on the MathSOC computer (the one behind the desk).
+
 ## Setting Up
 1.  To run a local PHP server, you'll need to get up Apache and MySQL running (if you're using Windows, this can be done easily through PHPMyAdmin).
 2.  If using Windows, download and setup [phpMyAdmin](http://www.phpmyadmin.net/home_page/index.php), and skip to step 5, otherwise, go to step 3.
